@@ -267,7 +267,7 @@ const ComingSoonPage = () => {
             <span>Hecho con</span>
             <span className="text-cr-red">❤</span>
             <span>en Costa Rica</span>
-            <span className="text-tropical-emerald">🌴</span>
+            <span className="text-tropical-emerald">🇨🇷🌴</span>
           </div>
         </motion.div>
       </div>
