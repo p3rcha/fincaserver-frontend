@@ -113,24 +113,23 @@ const ComingSoonPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
         >
-          <motion.div 
-            className="inline-block"
-            animate={{ 
-              boxShadow: [
-                '0 0 20px rgba(34, 139, 34, 0.3)',
-                '0 0 40px rgba(34, 139, 34, 0.5)',
-                '0 0 20px rgba(34, 139, 34, 0.3)',
-              ]
-            }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <span className="inline-block px-8 py-4 text-3xl sm:text-4xl md:text-5xl font-bold
+          <div className="relative inline-block">
+            {/* Glow effect behind */}
+            <motion.div 
+              className="absolute -inset-1 bg-tropical-green/30 rounded-2xl blur-xl"
+              animate={{ 
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+            {/* Badge */}
+            <span className="relative inline-block px-8 py-4 text-3xl sm:text-4xl md:text-5xl font-bold
                            bg-gradient-to-r from-jungle-medium to-jungle-dark
-                           border-2 border-tropical-green/50 rounded-2xl
+                           border-2 border-tropical-green/40 rounded-2xl
                            text-tropical-emerald tracking-wider">
               ¡MUY PRONTO!
             </span>
-          </motion.div>
+          </div>
         </motion.div>
 
         {/* Description */}
