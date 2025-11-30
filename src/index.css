@@ -1,0 +1,56 @@
+/* Google Fonts - Outfit for headers, clean modern look */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+@import "tailwindcss";
+
+/* Costa Rica Color Palette */
+@theme {
+  --color-cr-blue: #002B7F;
+  --color-cr-blue-light: #1a4a9e;
+  --color-cr-red: #CE1126;
+  --color-cr-red-light: #e63946;
+  --color-tropical-green: #228B22;
+  --color-tropical-green-dark: #1a6b1a;
+  --color-tropical-teal: #2E8B57;
+  --color-tropical-emerald: #10B981;
+  --color-gold-accent: #F59E0B;
+  --color-jungle-dark: #0f1a0f;
+  --color-jungle-medium: #1a2e1a;
+}
+
+:root {
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #0f1a0f;
+  color: #f8fafc;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a2e1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #228B22;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2E8B57;
+}
