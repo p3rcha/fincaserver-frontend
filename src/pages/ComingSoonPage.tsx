@@ -52,30 +52,12 @@ const ComingSoonPage = () => {
         />
       </div>
 
-      {/* Animated glow orbs */}
-      <motion.div
-        className="absolute w-[500px] h-[500px] rounded-full blur-[120px] opacity-20"
+      {/* Cursor spotlight effect - follows mouse directly */}
+      <div 
+        className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: 'radial-gradient(circle, #228B22 0%, transparent 70%)',
-          left: `${mousePos.x * 30}%`,
-          top: `${mousePos.y * 30}%`,
+          background: `radial-gradient(800px circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(34, 139, 34, 0.15), transparent 40%)`,
         }}
-        animate={{
-          scale: [1, 1.2, 1],
-        }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-15"
-        style={{
-          background: 'radial-gradient(circle, #002B7F 0%, transparent 70%)',
-          right: `${(1 - mousePos.x) * 20}%`,
-          bottom: `${(1 - mousePos.y) * 20}%`,
-        }}
-        animate={{
-          scale: [1.2, 1, 1.2],
-        }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
 
       {/* Main Content */}
