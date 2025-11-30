@@ -204,7 +204,9 @@ const ComingSoonPage = () => {
         >
           {/* Discord */}
           <motion.a
-            href="#"
+            href="https://discord.com/invite/FQh9dcNMQq"
+            target="_blank"
+            rel="noopener noreferrer"
             className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 
                       flex items-center justify-center text-white/60 
                       hover:bg-white/10 hover:text-white hover:border-tropical-green/50
@@ -220,7 +222,9 @@ const ComingSoonPage = () => {
 
           {/* Instagram */}
           <motion.a
-            href="#"
+            href="https://www.instagram.com/fincaserver"
+            target="_blank"
+            rel="noopener noreferrer"
             className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 
                       flex items-center justify-center text-white/60 
                       hover:bg-white/10 hover:text-white hover:border-tropical-green/50
@@ -236,7 +240,9 @@ const ComingSoonPage = () => {
 
           {/* TikTok */}
           <motion.a
-            href="#"
+            href="https://www.tiktok.com/@fincaserver"
+            target="_blank"
+            rel="noopener noreferrer"
             className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 
                       flex items-center justify-center text-white/60 
                       hover:bg-white/10 hover:text-white hover:border-tropical-green/50
