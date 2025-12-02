@@ -10,10 +10,15 @@ const HeroSection = () => {
 
   // Brightness/reveal effect based on mouse activity
   const [isHovering, setIsHovering] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
 
   useEffect(() => {
-    const handleMouseMove = () => {
+    const handleMouseMove = (e: MouseEvent) => {
       setIsHovering(true);
+      setMousePos({
+        x: e.clientX / window.innerWidth,
+        y: e.clientY / window.innerHeight,
+      });
     };
 
     const handleMouseLeave = () => {
@@ -63,6 +68,14 @@ const HeroSection = () => {
           }}
         />
       </div>
+
+      {/* Cursor spotlight effect */}
+      <div 
+        className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+        style={{
+          background: `radial-gradient(800px circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(34, 139, 34, 0.15), transparent 40%)`,
+        }}
+      />
 
       {/* Content */}
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
