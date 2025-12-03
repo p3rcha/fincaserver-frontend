@@ -53,29 +53,29 @@ const StorePage = () => {
   }, []);
 
   // Fetch packages and categories
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const [packagesRes, categoriesRes] = await Promise.all([
-          getPackages(),
-          getCategories(),
-        ]);
+      const [packagesRes, categoriesRes] = await Promise.all([
+        getPackages(),
+        getCategories(),
+      ]);
 
-        setPackages(packagesRes.data || []);
-        setCategories(categoriesRes.data || []);
-      } catch (err) {
-        console.error('Failed to fetch store data:', err);
-        setError('No se pudo cargar la tienda. Por favor, intenta de nuevo.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+      setPackages(packagesRes.data || []);
+      setCategories(categoriesRes.data || []);
+    } catch (err) {
+      console.error('Failed to fetch store data:', err);
+      setError('No se pudo cargar la tienda. Por favor, intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Handle purchase
   const handlePurchase = useCallback(async (packageId: number) => {
@@ -140,7 +140,7 @@ const StorePage = () => {
           </div>
           <p className="text-white/60 mb-4">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={fetchData}
             className="px-6 py-2 bg-tropical-green text-white rounded-lg hover:bg-tropical-teal transition-colors"
           >
             Reintentar
