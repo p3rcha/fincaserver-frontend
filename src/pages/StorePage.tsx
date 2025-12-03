@@ -4,18 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { getPackages, getCategories, createBasket, addPackageToBasket } from '../api/tebexApi';
 import type { TebexPackage, TebexCategory } from '../types/TebexTypes';
 import ProductCard from '../components/store/ProductCard';
-
-// Declare Tebex global for TypeScript
-declare global {
-  interface Window {
-    Tebex?: {
-      checkout: {
-        init: (config: { ident: string }) => void;
-        launch: () => void;
-      };
-    };
-  }
-}
+import { useTebexCheckout } from '../hooks/useTebexCheckout';
 
 const StorePage = () => {
   const [searchParams] = useSearchParams();
@@ -27,7 +16,40 @@ const StorePage = () => {
   const [purchasingId, setPurchasingId] = useState<number | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'cancelled'; message: string } | null>(null);
 
-  // Check for success/cancelled URL params
+  // Initialize Tebex checkout with event handlers
+  const { launchCheckout } = useTebexCheckout({
+    theme: 'dark',
+    locale: 'es_ES',
+    colors: [
+      { name: 'primary', color: '#228B22' },    // tropical-green
+      { name: 'secondary', color: '#10B981' },  // tropical-emerald
+    ],
+    onOpen: () => {
+      console.log('Checkout opened');
+    },
+    onClose: () => {
+      console.log('Checkout closed');
+      setPurchasingId(null);
+    },
+    onPaymentComplete: (event) => {
+      console.log('Payment complete:', event);
+      setNotification({ 
+        type: 'success', 
+        message: '¡Compra completada! Gracias por tu apoyo. Tu compra será procesada en breve.' 
+      });
+      setPurchasingId(null);
+    },
+    onPaymentError: (event) => {
+      console.error('Payment error:', event);
+      setNotification({ 
+        type: 'error', 
+        message: 'Error en el pago. Por favor, intenta de nuevo o contacta soporte.' 
+      });
+      setPurchasingId(null);
+    },
+  });
+
+  // Check for success/cancelled URL params (fallback for redirect flow)
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       setNotification({ type: 'success', message: '¡Compra completada! Gracias por tu apoyo.' });
@@ -37,20 +59,6 @@ const StorePage = () => {
       window.history.replaceState({}, '', '/store');
     }
   }, [searchParams]);
-
-  // Load Tebex.js script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://js.tebex.io/v/1.js';
-    script.defer = true;
-    document.head.appendChild(script);
-
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  }, []);
 
   // Fetch packages and categories
   const fetchData = useCallback(async () => {
@@ -77,34 +85,32 @@ const StorePage = () => {
     fetchData();
   }, [fetchData]);
 
-  // Handle purchase
+  // Handle purchase - creates basket, adds package, launches checkout
   const handlePurchase = useCallback(async (packageId: number) => {
     if (purchasingId) return;
 
     try {
       setPurchasingId(packageId);
 
-      // Create basket
+      // Create basket via backend API
       const basketRes = await createBasket();
       const basketIdent = basketRes.data.ident;
 
       // Add package to basket
       await addPackageToBasket(basketIdent, packageId);
 
-      // Launch Tebex checkout
-      if (window.Tebex) {
-        window.Tebex.checkout.init({ ident: basketIdent });
-        window.Tebex.checkout.launch();
-      } else {
-        throw new Error('Tebex checkout not loaded');
-      }
+      // Launch Tebex checkout modal
+      launchCheckout(basketIdent);
+
     } catch (err) {
       console.error('Purchase error:', err);
-      setNotification({ type: 'error', message: 'Error al procesar la compra. Por favor, intenta de nuevo.' });
-    } finally {
+      setNotification({ 
+        type: 'error', 
+        message: 'Error al procesar la compra. Por favor, intenta de nuevo.' 
+      });
       setPurchasingId(null);
     }
-  }, [purchasingId]);
+  }, [purchasingId, launchCheckout]);
 
   // Filter packages by category
   const filteredPackages = selectedCategory
@@ -113,6 +119,16 @@ const StorePage = () => {
 
   // Dismiss notification
   const dismissNotification = () => setNotification(null);
+
+  // Auto-dismiss notifications after 5 seconds
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   if (loading) {
     return (
@@ -152,16 +168,16 @@ const StorePage = () => {
 
   return (
     <div className="min-h-screen bg-jungle-dark pt-24 pb-16">
-      {/* Notification */}
+      {/* Notification Toast */}
       <AnimatePresence>
         {notification && (
           <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.95 }}
             className="fixed top-24 left-1/2 -translate-x-1/2 z-50 max-w-md w-full mx-4"
           >
-            <div className={`px-6 py-4 rounded-xl backdrop-blur-lg border shadow-lg flex items-center gap-3
+            <div className={`px-6 py-4 rounded-xl backdrop-blur-lg border shadow-2xl flex items-center gap-3
               ${notification.type === 'success' 
                 ? 'bg-tropical-green/20 border-tropical-green/30 text-tropical-emerald' 
                 : notification.type === 'cancelled'
@@ -169,8 +185,31 @@ const StorePage = () => {
                 : 'bg-cr-red/20 border-cr-red/30 text-cr-red-light'
               }`}
             >
-              <span className="flex-1">{notification.message}</span>
-              <button onClick={dismissNotification} className="p-1 hover:opacity-70">
+              {/* Icon */}
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                ${notification.type === 'success' 
+                  ? 'bg-tropical-green/30' 
+                  : notification.type === 'cancelled'
+                  ? 'bg-yellow-500/30'
+                  : 'bg-cr-red/30'
+                }`}
+              >
+                {notification.type === 'success' ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : notification.type === 'cancelled' ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </div>
+              <span className="flex-1 text-sm">{notification.message}</span>
+              <button onClick={dismissNotification} className="p-1 hover:opacity-70 transition-opacity">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -246,7 +285,7 @@ const StorePage = () => {
                 key={pkg.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
+                transition={{ delay: 0.1 * Math.min(index, 5) }}
               >
                 <ProductCard
                   package_={pkg}
