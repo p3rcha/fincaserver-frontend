@@ -11,7 +11,7 @@ import type {
   TebexWebstore,
 } from '../types/TebexTypes';
 
-const API_BASE = 'http://localhost:3001/api/tebex';
+const API_BASE = 'http://localhost:4000/api/tebex';
 
 // ============================================
 // WEBSTORE INFO
