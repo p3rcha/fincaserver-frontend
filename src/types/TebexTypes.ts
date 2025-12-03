@@ -1,3 +1,21 @@
+/**
+ * Tebex API Types
+ * Based on: https://docs.tebex.io/developers/headless-api/endpoints
+ */
+
+export interface TebexWebstore {
+  id: number;
+  description: string;
+  name: string;
+  webstore_url: string;
+  currency: string;
+  lang: string;
+  logo: string | null;
+  platform_type: string;
+  platform_type_id: string;
+  created_at: string;
+}
+
 export interface TebexPackage {
   id: number;
   name: string;
