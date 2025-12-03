@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSearchParams } from 'react-router-dom';
-import { getPackages, getCategories, createBasket, addPackageToBasket } from '../api/tebexApi';
+import { fetchPackages, fetchCategories, createBasket, addPackageToBasket } from '../api/tebexApi';
 import type { TebexPackage, TebexCategory } from '../types/TebexTypes';
 import ProductCard from '../components/store/ProductCard';
 import { useTebexCheckout } from '../hooks/useTebexCheckout';
@@ -66,13 +66,13 @@ const StorePage = () => {
       setLoading(true);
       setError(null);
 
-      const [packagesRes, categoriesRes] = await Promise.all([
-        getPackages(),
-        getCategories(),
+      const [packagesData, categoriesData] = await Promise.all([
+        fetchPackages(),
+        fetchCategories(),
       ]);
 
-      setPackages(packagesRes.data || []);
-      setCategories(categoriesRes.data || []);
+      setPackages(packagesData);
+      setCategories(categoriesData);
     } catch (err) {
       console.error('Failed to fetch store data:', err);
       setError('No se pudo cargar la tienda. Por favor, intenta de nuevo.');
@@ -92,9 +92,9 @@ const StorePage = () => {
     try {
       setPurchasingId(packageId);
 
-      // Create basket via backend API
-      const basketRes = await createBasket();
-      const basketIdent = basketRes.data.ident;
+      // Create basket via backend API (returns basket directly)
+      const basket = await createBasket();
+      const basketIdent = basket.ident;
 
       // Add package to basket
       await addPackageToBasket(basketIdent, packageId);
