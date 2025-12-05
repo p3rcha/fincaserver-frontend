@@ -2,16 +2,21 @@
  * Tebex API Client
  * Frontend API calls to backend Tebex proxy endpoints
  * Based on: https://docs.tebex.io/developers/headless-api/endpoints
+ * 
+ * Ahora usa axios a través de apiClient para:
+ * - Parsing JSON automático
+ * - Mejor manejo de errores
+ * - Interceptors centralizados
+ * - Timeouts configurados
  */
 
+import apiClient from './client';
 import type {
   TebexPackage,
   TebexCategory,
   TebexBasket,
   TebexWebstore,
 } from '../types/TebexTypes';
-
-const API_BASE = 'http://localhost:4000/api/tebex';
 
 // ============================================
 // WEBSTORE INFO
@@ -21,19 +26,15 @@ const API_BASE = 'http://localhost:4000/api/tebex';
  * Fetch webstore information
  */
 export async function fetchWebstore(): Promise<TebexWebstore> {
-  const response = await fetch(`${API_BASE}/webstore`);
-  if (!response.ok) throw new Error('Failed to fetch webstore');
-  const data = await response.json();
+  const { data } = await apiClient.get('/tebex/webstore');
   return data.data;
 }
 
 /**
  * Fetch custom pages
  */
-export async function fetchPages(): Promise<any[]> {
-  const response = await fetch(`${API_BASE}/pages`);
-  if (!response.ok) throw new Error('Failed to fetch pages');
-  const data = await response.json();
+export async function fetchPages(): Promise<unknown[]> {
+  const { data } = await apiClient.get('/tebex/pages');
   return data.data || [];
 }
 
@@ -48,13 +49,9 @@ export async function fetchPages(): Promise<any[]> {
 export async function fetchCategories(
   includePackages = false
 ): Promise<TebexCategory[]> {
-  const url = includePackages
-    ? `${API_BASE}/categories?includePackages=true`
-    : `${API_BASE}/categories`;
-
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('Failed to fetch categories');
-  const data = await response.json();
+  const { data } = await apiClient.get('/tebex/categories', {
+    params: includePackages ? { includePackages: 'true' } : {},
+  });
   return data.data || [];
 }
 
@@ -67,13 +64,9 @@ export async function fetchCategory(
   categoryId: number,
   includePackages = false
 ): Promise<TebexCategory> {
-  const url = includePackages
-    ? `${API_BASE}/categories/${categoryId}?includePackages=true`
-    : `${API_BASE}/categories/${categoryId}`;
-
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('Failed to fetch category');
-  const data = await response.json();
+  const { data } = await apiClient.get(`/tebex/categories/${categoryId}`, {
+    params: includePackages ? { includePackages: 'true' } : {},
+  });
   return data.data;
 }
 
@@ -81,9 +74,7 @@ export async function fetchCategory(
  * Fetch all packages from the store
  */
 export async function fetchPackages(): Promise<TebexPackage[]> {
-  const response = await fetch(`${API_BASE}/packages`);
-  if (!response.ok) throw new Error('Failed to fetch packages');
-  const data = await response.json();
+  const { data } = await apiClient.get('/tebex/packages');
   return data.data || [];
 }
 
@@ -91,9 +82,7 @@ export async function fetchPackages(): Promise<TebexPackage[]> {
  * Fetch a specific package by ID
  */
 export async function fetchPackage(packageId: number): Promise<TebexPackage> {
-  const response = await fetch(`${API_BASE}/packages/${packageId}`);
-  if (!response.ok) throw new Error('Failed to fetch package');
-  const data = await response.json();
+  const { data } = await apiClient.get(`/tebex/packages/${packageId}`);
   return data.data;
 }
 
@@ -112,13 +101,7 @@ interface CreateBasketOptions {
 export async function createBasket(
   options?: CreateBasketOptions
 ): Promise<TebexBasket> {
-  const response = await fetch(`${API_BASE}/baskets`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(options || {}),
-  });
-  if (!response.ok) throw new Error('Failed to create basket');
-  const data = await response.json();
+  const { data } = await apiClient.post('/tebex/baskets', options || {});
   return data.data;
 }
 
@@ -126,9 +109,7 @@ export async function createBasket(
  * Fetch basket details
  */
 export async function fetchBasket(basketIdent: string): Promise<TebexBasket> {
-  const response = await fetch(`${API_BASE}/baskets/${basketIdent}`);
-  if (!response.ok) throw new Error('Failed to fetch basket');
-  const data = await response.json();
+  const { data } = await apiClient.get(`/tebex/baskets/${basketIdent}`);
   return data.data;
 }
 
@@ -139,13 +120,9 @@ export async function getBasketAuthLinks(
   basketIdent: string,
   returnUrl?: string
 ): Promise<{ name: string; url: string }[]> {
-  const url = returnUrl
-    ? `${API_BASE}/baskets/${basketIdent}/auth?returnUrl=${encodeURIComponent(returnUrl)}`
-    : `${API_BASE}/baskets/${basketIdent}/auth`;
-
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('Failed to get auth links');
-  const data = await response.json();
+  const { data } = await apiClient.get(`/tebex/baskets/${basketIdent}/auth`, {
+    params: returnUrl ? { returnUrl } : {},
+  });
   return data.data || [];
 }
 
@@ -161,13 +138,11 @@ export async function addPackageToBasket(
   packageId: number,
   quantity = 1
 ): Promise<TebexBasket> {
-  const response = await fetch(`${API_BASE}/baskets/${basketIdent}/packages`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ package_id: packageId, quantity }),
+  const { data } = await apiClient.post(`/tebex/baskets/${basketIdent}/packages`, {
+    package_id: packageId,
+    quantity,
   });
-  if (!response.ok) throw new Error('Failed to add package to basket');
-  return response.json();
+  return data;
 }
 
 /**
@@ -177,16 +152,10 @@ export async function removePackageFromBasket(
   basketIdent: string,
   packageId: number
 ): Promise<TebexBasket> {
-  const response = await fetch(
-    `${API_BASE}/baskets/${basketIdent}/packages/remove`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ package_id: packageId }),
-    }
-  );
-  if (!response.ok) throw new Error('Failed to remove package from basket');
-  return response.json();
+  const { data } = await apiClient.post(`/tebex/baskets/${basketIdent}/packages/remove`, {
+    package_id: packageId,
+  });
+  return data;
 }
 
 /**
@@ -197,16 +166,10 @@ export async function updatePackageQuantity(
   packageId: number,
   quantity: number
 ): Promise<{ success: boolean }> {
-  const response = await fetch(
-    `${API_BASE}/baskets/${basketIdent}/packages/${packageId}`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity }),
-    }
-  );
-  if (!response.ok) throw new Error('Failed to update quantity');
-  return response.json();
+  const { data } = await apiClient.put(`/tebex/baskets/${basketIdent}/packages/${packageId}`, {
+    quantity,
+  });
+  return data;
 }
 
 // ============================================
@@ -220,27 +183,18 @@ export async function applyCoupon(
   basketIdent: string,
   couponCode: string
 ): Promise<TebexBasket> {
-  const response = await fetch(`${API_BASE}/baskets/${basketIdent}/coupons`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ coupon_code: couponCode }),
+  const { data } = await apiClient.post(`/tebex/baskets/${basketIdent}/coupons`, {
+    coupon_code: couponCode,
   });
-  if (!response.ok) throw new Error('Failed to apply coupon');
-  return response.json();
+  return data;
 }
 
 /**
  * Remove coupon from basket
  */
-export async function removeCoupon(
-  basketIdent: string
-): Promise<TebexBasket> {
-  const response = await fetch(
-    `${API_BASE}/baskets/${basketIdent}/coupons/remove`,
-    { method: 'POST' }
-  );
-  if (!response.ok) throw new Error('Failed to remove coupon');
-  return response.json();
+export async function removeCoupon(basketIdent: string): Promise<TebexBasket> {
+  const { data } = await apiClient.post(`/tebex/baskets/${basketIdent}/coupons/remove`);
+  return data;
 }
 
 /**
@@ -250,27 +204,18 @@ export async function applyGiftCard(
   basketIdent: string,
   cardNumber: string
 ): Promise<TebexBasket> {
-  const response = await fetch(`${API_BASE}/baskets/${basketIdent}/giftcards`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ card_number: cardNumber }),
+  const { data } = await apiClient.post(`/tebex/baskets/${basketIdent}/giftcards`, {
+    card_number: cardNumber,
   });
-  if (!response.ok) throw new Error('Failed to apply gift card');
-  return response.json();
+  return data;
 }
 
 /**
  * Remove gift card from basket
  */
-export async function removeGiftCard(
-  basketIdent: string
-): Promise<TebexBasket> {
-  const response = await fetch(
-    `${API_BASE}/baskets/${basketIdent}/giftcards/remove`,
-    { method: 'POST' }
-  );
-  if (!response.ok) throw new Error('Failed to remove gift card');
-  return response.json();
+export async function removeGiftCard(basketIdent: string): Promise<TebexBasket> {
+  const { data } = await apiClient.post(`/tebex/baskets/${basketIdent}/giftcards/remove`);
+  return data;
 }
 
 /**
@@ -280,30 +225,18 @@ export async function applyCreatorCode(
   basketIdent: string,
   creatorCode: string
 ): Promise<TebexBasket> {
-  const response = await fetch(
-    `${API_BASE}/baskets/${basketIdent}/creator-codes`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ creator_code: creatorCode }),
-    }
-  );
-  if (!response.ok) throw new Error('Failed to apply creator code');
-  return response.json();
+  const { data } = await apiClient.post(`/tebex/baskets/${basketIdent}/creator-codes`, {
+    creator_code: creatorCode,
+  });
+  return data;
 }
 
 /**
  * Remove creator code from basket
  */
-export async function removeCreatorCode(
-  basketIdent: string
-): Promise<TebexBasket> {
-  const response = await fetch(
-    `${API_BASE}/baskets/${basketIdent}/creator-codes/remove`,
-    { method: 'POST' }
-  );
-  if (!response.ok) throw new Error('Failed to remove creator code');
-  return response.json();
+export async function removeCreatorCode(basketIdent: string): Promise<TebexBasket> {
+  const { data } = await apiClient.post(`/tebex/baskets/${basketIdent}/creator-codes/remove`);
+  return data;
 }
 
 // ============================================
@@ -322,8 +255,6 @@ interface SidebarModule {
  * Fetch sidebar modules (top customers, recent purchases, etc.)
  */
 export async function fetchSidebar(): Promise<SidebarModule[]> {
-  const response = await fetch(`${API_BASE}/sidebar`);
-  if (!response.ok) throw new Error('Failed to fetch sidebar');
-  const data = await response.json();
+  const { data } = await apiClient.get('/tebex/sidebar');
   return data.data || [];
 }
