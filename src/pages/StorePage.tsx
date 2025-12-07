@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { fetchPackages, fetchCategories, createBasket, addPackageToBasket } from '../api/tebexApi';
 import type { TebexPackage, TebexCategory } from '../types/TebexTypes';
 import ProductCard from '../components/store/ProductCard';
+import ProductModal from '../components/store/ProductModal';
 import { useTebexCheckout } from '../hooks/useTebexCheckout';
 
 const StorePage = () => {
@@ -15,6 +16,10 @@ const StorePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [purchasingId, setPurchasingId] = useState<number | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'cancelled'; message: string } | null>(null);
+  
+  // Modal state for product details
+  const [selectedProduct, setSelectedProduct] = useState<TebexPackage | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Initialize Tebex checkout with event handlers
   const { launchCheckout } = useTebexCheckout({
@@ -120,6 +125,19 @@ const StorePage = () => {
   // Dismiss notification
   const dismissNotification = () => setNotification(null);
 
+  // Open product detail modal
+  const handleViewDetails = useCallback((product: TebexPackage) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  }, []);
+
+  // Close product detail modal
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    // Delay clearing selected product to allow exit animation
+    setTimeout(() => setSelectedProduct(null), 300);
+  }, []);
+
   // Auto-dismiss notifications after 5 seconds
   useEffect(() => {
     if (notification) {
@@ -181,8 +199,8 @@ const StorePage = () => {
               ${notification.type === 'success' 
                 ? 'bg-tropical-green/20 border-tropical-green/30 text-tropical-emerald' 
                 : notification.type === 'cancelled'
-                ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400'
-                : 'bg-cr-red/20 border-cr-red/30 text-cr-red-light'
+                ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-300'
+                : 'bg-red-950/80 border-red-500/50 text-red-200'
               }`}
             >
               {/* Icon */}
@@ -191,7 +209,7 @@ const StorePage = () => {
                   ? 'bg-tropical-green/30' 
                   : notification.type === 'cancelled'
                   ? 'bg-yellow-500/30'
-                  : 'bg-cr-red/30'
+                  : 'bg-red-500/40'
                 }`}
               >
                 {notification.type === 'success' ? (
@@ -290,13 +308,24 @@ const StorePage = () => {
                 <ProductCard
                   package_={pkg}
                   onPurchase={handlePurchase}
+                  onViewDetails={handleViewDetails}
                   isPurchasing={purchasingId === pkg.id}
                 />
               </motion.div>
             ))}
           </motion.div>
         )}
+
       </div>
+
+      {/* Product Detail Modal - placed outside the container for proper z-index */}
+      <ProductModal
+        package_={selectedProduct}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onPurchase={handlePurchase}
+        isPurchasing={purchasingId === selectedProduct?.id}
+      />
     </div>
   );
 };

@@ -4,24 +4,51 @@ import type { TebexPackage } from '../../types/TebexTypes';
 interface ProductCardProps {
   package_: TebexPackage;
   onPurchase: (packageId: number) => void;
+  onViewDetails: (package_: TebexPackage) => void;
   isPurchasing: boolean;
 }
 
-const ProductCard = ({ package_, onPurchase, isPurchasing }: ProductCardProps) => {
+/**
+ * Strip HTML tags from description for preview text
+ */
+const stripHtml = (html: string): string => {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
+
+/**
+ * ProductCard - Clickable card component for store products
+ * Clicking the card opens the detail modal, clicking the button triggers purchase
+ */
+const ProductCard = ({ package_, onPurchase, onViewDetails, isPurchasing }: ProductCardProps) => {
   const hasDiscount = package_.sales_price !== null && package_.sales_price < package_.base_price;
+  const descriptionPreview = stripHtml(package_.description);
   const displayPrice = hasDiscount ? package_.sales_price! : package_.base_price;
   const discountPercent = hasDiscount 
     ? Math.round((1 - package_.sales_price! / package_.base_price) * 100) 
     : 0;
 
+  // Handle card click - open modal unless clicking the purchase button
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Check if clicking the actual purchase button (not the card itself)
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-purchase-button]')) return;
+    onViewDetails(package_);
+  };
+
   return (
     <motion.div
       className="group relative bg-white/5 backdrop-blur-sm border border-white/10 
                  rounded-2xl overflow-hidden hover:border-tropical-green/30 
-                 transition-all duration-300"
+                 transition-all duration-300 cursor-pointer"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
+      onClick={handleCardClick}
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onViewDetails(package_)}
+      aria-label={`Ver detalles de ${package_.name}`}
     >
       {/* Discount Badge */}
       {hasDiscount && (
@@ -67,10 +94,10 @@ const ProductCard = ({ package_, onPurchase, isPurchasing }: ProductCardProps) =
           {package_.name}
         </h3>
 
-        {/* Description */}
-        <p className="text-white/60 text-sm mb-4 line-clamp-2" 
-           dangerouslySetInnerHTML={{ __html: package_.description }} 
-        />
+        {/* Description Preview (plain text) */}
+        <p className="text-white/60 text-sm mb-4 line-clamp-2">
+          {descriptionPreview}
+        </p>
 
         {/* Price and Button */}
         <div className="flex items-center justify-between">
@@ -89,6 +116,7 @@ const ProductCard = ({ package_, onPurchase, isPurchasing }: ProductCardProps) =
           <motion.button
             onClick={() => onPurchase(package_.id)}
             disabled={isPurchasing}
+            data-purchase-button
             className="px-5 py-2.5 bg-gradient-to-r from-tropical-green to-tropical-teal 
                        text-white font-semibold rounded-xl
                        hover:shadow-lg hover:shadow-tropical-green/30
