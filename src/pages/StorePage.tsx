@@ -1,17 +1,38 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchPackages, fetchCategories, createBasket, addPackageToBasket } from '../api/tebexApi';
 import type { TebexPackage, TebexCategory } from '../types/TebexTypes';
 import ProductCard from '../components/store/ProductCard';
 import ProductModal from '../components/store/ProductModal';
 import { useTebexCheckout } from '../hooks/useTebexCheckout';
 
+/**
+ * Convert category name to URL slug
+ */
+const toSlug = (name: string): string => {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+};
+
+/**
+ * Find category by slug
+ */
+const findCategoryBySlug = (categories: TebexCategory[], slug: string): TebexCategory | undefined => {
+  return categories.find(cat => toSlug(cat.name) === slug);
+};
+
 const StorePage = () => {
+  const { category: categorySlug } = useParams<{ category: string }>();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
   const [packages, setPackages] = useState<TebexPackage[]>([]);
   const [categories, setCategories] = useState<TebexCategory[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [purchasingId, setPurchasingId] = useState<number | null>(null);
@@ -58,12 +79,12 @@ const StorePage = () => {
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       setNotification({ type: 'success', message: '¡Compra completada! Gracias por tu apoyo.' });
-      window.history.replaceState({}, '', '/store');
+      window.history.replaceState({}, '', `/tienda/${categorySlug ?? 'rangos'}`);
     } else if (searchParams.get('cancelled') === 'true') {
       setNotification({ type: 'cancelled', message: 'Compra cancelada. Puedes intentarlo de nuevo.' });
-      window.history.replaceState({}, '', '/store');
+      window.history.replaceState({}, '', `/tienda/${categorySlug ?? 'rangos'}`);
     }
-  }, [searchParams]);
+  }, [searchParams, categorySlug]);
 
   // Fetch packages and categories
   const fetchData = useCallback(async () => {
@@ -89,6 +110,26 @@ const StorePage = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Find the current category based on URL slug
+  const currentCategory = useMemo(() => {
+    if (!categorySlug || categories.length === 0) return null;
+    return findCategoryBySlug(categories, categorySlug);
+  }, [categorySlug, categories]);
+
+  // Redirect to first available category if current slug is invalid
+  useEffect(() => {
+    if (!loading && categories.length > 0 && categorySlug) {
+      const found = findCategoryBySlug(categories, categorySlug);
+      if (!found) {
+        // Category not found, redirect to first category
+        const firstCategory = categories[0];
+        if (firstCategory) {
+          navigate(`/tienda/${toSlug(firstCategory.name)}`, { replace: true });
+        }
+      }
+    }
+  }, [loading, categories, categorySlug, navigate]);
 
   // Handle purchase - creates basket, adds package, launches checkout
   const handlePurchase = useCallback(async (packageId: number) => {
@@ -117,10 +158,11 @@ const StorePage = () => {
     }
   }, [purchasingId, launchCheckout]);
 
-  // Filter packages by category
-  const filteredPackages = selectedCategory
-    ? packages.filter(pkg => pkg.category?.id === selectedCategory)
-    : packages;
+  // Filter packages by current category
+  const filteredPackages = useMemo(() => {
+    if (!currentCategory) return [];
+    return packages.filter(pkg => pkg.category?.id === currentCategory.id);
+  }, [packages, currentCategory]);
 
   // Dismiss notification
   const dismissNotification = () => setNotification(null);
@@ -137,6 +179,11 @@ const StorePage = () => {
     // Delay clearing selected product to allow exit animation
     setTimeout(() => setSelectedProduct(null), 300);
   }, []);
+
+  // Navigate to category
+  const handleCategoryChange = useCallback((category: TebexCategory) => {
+    navigate(`/tienda/${toSlug(category.name)}`);
+  }, [navigate]);
 
   // Auto-dismiss notifications after 5 seconds
   useEffect(() => {
@@ -252,37 +299,30 @@ const StorePage = () => {
           </p>
         </motion.div>
 
-        {/* Category Filter */}
+        {/* Category Tabs - No "Todos" option */}
         {categories.length > 0 && (
           <motion.div
-            className="flex flex-wrap justify-center gap-3 mb-12"
+            className="flex flex-wrap md:flex-nowrap justify-center gap-3 mb-12 overflow-x-auto md:overflow-x-visible"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-5 py-2 rounded-xl font-medium transition-all duration-300 ${
-                selectedCategory === null
-                  ? 'bg-tropical-green text-white shadow-lg shadow-tropical-green/30'
-                  : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/10'
-              }`}
-            >
-              Todos
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-5 py-2 rounded-xl font-medium transition-all duration-300 ${
-                  selectedCategory === category.id
-                    ? 'bg-tropical-green text-white shadow-lg shadow-tropical-green/30'
-                    : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/10'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
+            {categories.map((category) => {
+              const isActive = currentCategory?.id === category.id;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => handleCategoryChange(category)}
+                  className={`px-5 py-2 rounded-xl font-medium transition-all duration-300 ${
+                    isActive
+                      ? 'bg-tropical-green text-white shadow-lg shadow-tropical-green/30'
+                      : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/10'
+                  }`}
+                >
+                  {category.name}
+                </button>
+              );
+            })}
           </motion.div>
         )}
 

@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import MainLayout from '../components/Layout/MainLayout';
 import HomePage from '../pages/HomePage';
 import StorePage from '../pages/StorePage';
@@ -14,13 +14,25 @@ export const router = createBrowserRouter([
         index: true,
         element: <HomePage />,
       },
-      {
-        path: 'store',
-        element: <StorePage />,
-      },
+      // Tienda routes with category
       {
         path: 'tienda',
-        element: <StorePage />,
+        children: [
+          {
+            index: true,
+            // Redirect /tienda to /tienda/rangos
+            element: <Navigate to="/tienda/rangos" replace />,
+          },
+          {
+            path: ':category',
+            element: <StorePage />,
+          },
+        ],
+      },
+      // Legacy /store redirect
+      {
+        path: 'store',
+        element: <Navigate to="/tienda" replace />,
       },
       {
         path: '*',
@@ -29,4 +41,3 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
-

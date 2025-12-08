@@ -23,9 +23,17 @@ const Navbar = () => {
   }, [location]);
 
   const navLinks = [
-    { to: '/', label: 'Inicio' },
-    { to: '/store', label: 'Tienda' },
+    { to: '/', label: 'Inicio', exact: true },
+    { to: '/tienda', label: 'Tienda', exact: false },
   ];
+  
+  // Check if link is active (exact match or starts with for nested routes)
+  const isLinkActive = (link: { to: string; exact: boolean }) => {
+    if (link.exact) {
+      return location.pathname === link.to;
+    }
+    return location.pathname.startsWith(link.to);
+  };
 
   return (
     <motion.nav
@@ -57,25 +65,28 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`relative text-sm font-medium transition-colors ${
-                  location.pathname === link.to 
-                    ? 'text-tropical-emerald' 
-                    : 'text-white/70 hover:text-white'
-                }`}
-              >
-                {link.label}
-                {location.pathname === link.to && (
-                  <motion.div
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-tropical-emerald rounded-full"
-                    layoutId="navbar-indicator"
-                  />
-                )}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = isLinkActive(link);
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`relative text-sm font-medium transition-colors ${
+                    isActive 
+                      ? 'text-tropical-emerald' 
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  {link.label}
+                  {isActive && (
+                    <motion.div
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-tropical-emerald rounded-full"
+                      layoutId="navbar-indicator"
+                    />
+                  )}
+                </Link>
+              );
+            })}
             
             {/* IP Copy Button - Small variant */}
             <IPCopyButton variant="small" />
@@ -108,19 +119,22 @@ const Navbar = () => {
             className="md:hidden bg-jungle-dark/95 backdrop-blur-lg border-t border-white/10"
           >
             <div className="px-4 py-6 space-y-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`block py-2 text-lg font-medium transition-colors ${
-                    location.pathname === link.to 
-                      ? 'text-tropical-emerald' 
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = isLinkActive(link);
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={`block py-2 text-lg font-medium transition-colors ${
+                      isActive 
+                        ? 'text-tropical-emerald' 
+                        : 'text-white/70 hover:text-white'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
               <div className="pt-4 border-t border-white/10">
                 <IPCopyButton variant="small" />
               </div>

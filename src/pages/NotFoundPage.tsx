@@ -55,7 +55,7 @@ const NotFoundPage = () => {
             Ir al Inicio
           </Link>
           <Link
-            to="/store"
+            to="/tienda"
             className="px-8 py-3 bg-white/10 border border-white/20 
                        text-white font-medium rounded-xl hover:bg-white/20
                        transition-all duration-300"
