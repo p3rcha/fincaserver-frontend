@@ -1,0 +1,4 @@
+# SPA fallback - redirect all routes to index.html
+# This file works for Netlify and other services that support _redirects
+# Status 200 means the URL doesn't change, allowing React Router to handle routing
+/*    /index.html   200
