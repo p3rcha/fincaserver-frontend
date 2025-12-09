@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchPackages, fetchCategories, createBasket, addPackageToBasket } from '../api/tebexApi';
+import { motion } from 'motion/react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { fetchPackages, fetchCategories } from '../api/tebexApi';
 import type { TebexPackage, TebexCategory } from '../types/TebexTypes';
 import ProductCard from '../components/store/ProductCard';
 import ProductModal from '../components/store/ProductModal';
-import { useTebexCheckout } from '../hooks/useTebexCheckout';
+
+// Discord invite URL
+const DISCORD_INVITE_URL = 'https://discord.com/invite/FQh9dcNMQq';
 
 /**
  * Convert category name to URL slug
@@ -29,62 +31,15 @@ const findCategoryBySlug = (categories: TebexCategory[], slug: string): TebexCat
 const StorePage = () => {
   const { category: categorySlug } = useParams<{ category: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   
   const [packages, setPackages] = useState<TebexPackage[]>([]);
   const [categories, setCategories] = useState<TebexCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [purchasingId, setPurchasingId] = useState<number | null>(null);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'cancelled'; message: string } | null>(null);
   
   // Modal state for product details
   const [selectedProduct, setSelectedProduct] = useState<TebexPackage | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Initialize Tebex checkout with event handlers
-  const { launchCheckout } = useTebexCheckout({
-    theme: 'dark',
-    locale: 'es_ES',
-    colors: [
-      { name: 'primary', color: '#228B22' },    // tropical-green
-      { name: 'secondary', color: '#10B981' },  // tropical-emerald
-    ],
-    onOpen: () => {
-      console.log('Checkout opened');
-    },
-    onClose: () => {
-      console.log('Checkout closed');
-      setPurchasingId(null);
-    },
-    onPaymentComplete: (event) => {
-      console.log('Payment complete:', event);
-      setNotification({ 
-        type: 'success', 
-        message: '¡Compra completada! Gracias por tu apoyo. Tu compra será procesada en breve.' 
-      });
-      setPurchasingId(null);
-    },
-    onPaymentError: (event) => {
-      console.error('Payment error:', event);
-      setNotification({ 
-        type: 'error', 
-        message: 'Error en el pago. Por favor, intenta de nuevo o contacta soporte.' 
-      });
-      setPurchasingId(null);
-    },
-  });
-
-  // Check for success/cancelled URL params (fallback for redirect flow)
-  useEffect(() => {
-    if (searchParams.get('success') === 'true') {
-      setNotification({ type: 'success', message: '¡Compra completada! Gracias por tu apoyo.' });
-      window.history.replaceState({}, '', `/tienda/${categorySlug ?? 'rangos'}`);
-    } else if (searchParams.get('cancelled') === 'true') {
-      setNotification({ type: 'cancelled', message: 'Compra cancelada. Puedes intentarlo de nuevo.' });
-      window.history.replaceState({}, '', `/tienda/${categorySlug ?? 'rangos'}`);
-    }
-  }, [searchParams, categorySlug]);
 
   // Fetch packages and categories
   const fetchData = useCallback(async () => {
@@ -131,41 +86,11 @@ const StorePage = () => {
     }
   }, [loading, categories, categorySlug, navigate]);
 
-  // Handle purchase - creates basket, adds package, launches checkout
-  const handlePurchase = useCallback(async (packageId: number) => {
-    if (purchasingId) return;
-
-    try {
-      setPurchasingId(packageId);
-
-      // Create basket via backend API (returns basket directly)
-      const basket = await createBasket();
-      const basketIdent = basket.ident;
-
-      // Add package to basket
-      await addPackageToBasket(basketIdent, packageId);
-
-      // Launch Tebex checkout modal
-      launchCheckout(basketIdent);
-
-    } catch (err) {
-      console.error('Purchase error:', err);
-      setNotification({ 
-        type: 'error', 
-        message: 'Error al procesar la compra. Por favor, intenta de nuevo.' 
-      });
-      setPurchasingId(null);
-    }
-  }, [purchasingId, launchCheckout]);
-
   // Filter packages by current category
   const filteredPackages = useMemo(() => {
     if (!currentCategory) return [];
     return packages.filter(pkg => pkg.category?.id === currentCategory.id);
   }, [packages, currentCategory]);
-
-  // Dismiss notification
-  const dismissNotification = () => setNotification(null);
 
   // Open product detail modal
   const handleViewDetails = useCallback((product: TebexPackage) => {
@@ -185,26 +110,58 @@ const StorePage = () => {
     navigate(`/tienda/${toSlug(category.name)}`);
   }, [navigate]);
 
-  // Auto-dismiss notifications after 5 seconds
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => {
-        setNotification(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification]);
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-jungle-dark flex items-center justify-center pt-20">
-        <div className="text-center">
-          <motion.div
-            className="w-16 h-16 border-4 border-tropical-green/30 border-t-tropical-green rounded-full mx-auto mb-4"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          />
-          <p className="text-white/60">Cargando tienda...</p>
+      <div className="min-h-screen bg-jungle-dark pt-24 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header Skeleton */}
+          <div className="text-center mb-12">
+            <div className="h-16 bg-white/5 rounded-xl w-64 mx-auto mb-4 animate-pulse" />
+            <div className="h-6 bg-white/5 rounded-lg w-96 max-w-full mx-auto animate-pulse" />
+          </div>
+
+          {/* Category Tabs Skeleton */}
+          <div className="flex flex-wrap md:flex-nowrap justify-center gap-3 mb-12">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-10 bg-white/5 rounded-xl w-24 animate-pulse"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              />
+            ))}
+          </div>
+
+          {/* Product Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <motion.div
+                key={i}
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                {/* Image skeleton */}
+                <div className="h-48 bg-gradient-to-br from-white/10 to-white/5 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
+                </div>
+                
+                {/* Content skeleton */}
+                <div className="p-6">
+                  <div className="h-4 bg-white/5 rounded w-20 mb-3 animate-pulse" />
+                  <div className="h-6 bg-white/5 rounded w-3/4 mb-2 animate-pulse" />
+                  <div className="h-4 bg-white/5 rounded w-full mb-2 animate-pulse" />
+                  <div className="h-4 bg-white/5 rounded w-2/3 mb-4 animate-pulse" />
+                  
+                  {/* Price and button skeleton */}
+                  <div className="flex items-center justify-between">
+                    <div className="h-8 bg-white/5 rounded w-24 animate-pulse" />
+                    <div className="h-10 bg-gradient-to-r from-tropical-green/20 to-tropical-teal/20 rounded-xl w-32 animate-pulse" />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -233,57 +190,6 @@ const StorePage = () => {
 
   return (
     <div className="min-h-screen bg-jungle-dark pt-24 pb-16">
-      {/* Notification Toast */}
-      <AnimatePresence>
-        {notification && (
-          <motion.div
-            initial={{ opacity: 0, y: -50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -50, scale: 0.95 }}
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-50 max-w-md w-full mx-4"
-          >
-            <div className={`px-6 py-4 rounded-xl backdrop-blur-lg border shadow-2xl flex items-center gap-3
-              ${notification.type === 'success' 
-                ? 'bg-tropical-green/20 border-tropical-green/30 text-tropical-emerald' 
-                : notification.type === 'cancelled'
-                ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-300'
-                : 'bg-red-950/80 border-red-500/50 text-red-200'
-              }`}
-            >
-              {/* Icon */}
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
-                ${notification.type === 'success' 
-                  ? 'bg-tropical-green/30' 
-                  : notification.type === 'cancelled'
-                  ? 'bg-yellow-500/30'
-                  : 'bg-red-500/40'
-                }`}
-              >
-                {notification.type === 'success' ? (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : notification.type === 'cancelled' ? (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                )}
-              </div>
-              <span className="flex-1 text-sm">{notification.message}</span>
-              <button onClick={dismissNotification} className="p-1 hover:opacity-70 transition-opacity">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -294,8 +200,20 @@ const StorePage = () => {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
             Tienda
           </h1>
-          <p className="text-white/60 text-lg max-w-2xl mx-auto">
+          <p className="text-white/60 text-lg max-w-2xl mx-auto mb-2">
             Apoya al servidor y obtén beneficios exclusivos
+          </p>
+          <p className="text-white/40 text-sm max-w-2xl mx-auto italic">
+            Por el momento, las compras se realizan mediante Sinpe Móvil. Para realizar tu compra,{' '}
+            <a
+              href={DISCORD_INVITE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-tropical-emerald hover:text-tropical-green underline transition-colors"
+            >
+              únete a nuestro Discord
+            </a>
+            {' '}y habla con <span className="font-semibold text-tropical-emerald">p3rcha</span>
           </p>
         </motion.div>
 
@@ -347,9 +265,7 @@ const StorePage = () => {
               >
                 <ProductCard
                   package_={pkg}
-                  onPurchase={handlePurchase}
                   onViewDetails={handleViewDetails}
-                  isPurchasing={purchasingId === pkg.id}
                 />
               </motion.div>
             ))}
@@ -363,8 +279,6 @@ const StorePage = () => {
         package_={selectedProduct}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onPurchase={handlePurchase}
-        isPurchasing={purchasingId === selectedProduct?.id}
       />
     </div>
   );
