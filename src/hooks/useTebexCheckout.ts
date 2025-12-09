@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef } from 'react';
 import Tebex from '@tebexio/tebex.js';
 
+type CheckoutColorName = 'primary' | 'secondary' | 'background' | 'surface' | 'surface-variant' | 'success' | 'warning' | 'error' | 'green' | 'red' | 'fields' | 'field-border';
+
 export interface TebexCheckoutConfig {
   theme?: 'light' | 'dark' | 'auto';
-  colors?: Array<{ name: string; color: string }>;
+  colors?: Array<{ name: CheckoutColorName; color: string }>;
   locale?: string;
 }
 
 export interface TebexCheckoutEvents {
   onOpen?: () => void;
   onClose?: () => void;
-  onPaymentComplete?: (event: { transactionId: string; status: string }) => void;
-  onPaymentError?: (event: { error: string }) => void;
+  onPaymentComplete?: (event: Event) => void;
+  onPaymentError?: (event: Event) => void;
 }
 
 interface UseTebexCheckoutOptions extends TebexCheckoutConfig, TebexCheckoutEvents {}
