@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
+// Server IP from environment variable or default
+const DEFAULT_SERVER_IP = import.meta.env.VITE_SERVER_IP || 'mc.fincaserver.net';
+
 interface IPCopyButtonProps {
   ip?: string;
   variant?: 'large' | 'small';
 }
 
-const IPCopyButton = ({ ip = 'mc.fincaserver.net', variant = 'large' }: IPCopyButtonProps) => {
+const IPCopyButton = ({ ip = DEFAULT_SERVER_IP, variant = 'large' }: IPCopyButtonProps) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {

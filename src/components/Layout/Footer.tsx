@@ -1,6 +1,10 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 
+// Server IP and Map URL from environment variables or defaults
+const SERVER_IP = import.meta.env.VITE_SERVER_IP || 'mc.fincaserver.net';
+const MAP_URL = import.meta.env.VITE_MAP_URL || 'https://mapa.fincaserver.net';
+
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
@@ -37,7 +41,7 @@ const Footer = () => {
             {/* Server IP */}
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10">
               <span className="text-white/60 text-sm">IP:</span>
-              <span className="text-tropical-emerald font-mono font-medium">mc.fincaserver.net</span>
+              <span className="text-tropical-emerald font-mono font-medium">{SERVER_IP}</span>
             </div>
           </div>
 
@@ -57,7 +61,7 @@ const Footer = () => {
               </li>
               <li>
                 <a 
-                  href="https://mapa.fincaserver.net" 
+                  href={MAP_URL} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-white/60 hover:text-tropical-emerald transition-colors text-sm"

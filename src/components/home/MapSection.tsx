@@ -2,6 +2,9 @@ import { motion } from 'motion/react';
 import { useInView } from 'motion/react';
 import { useRef } from 'react';
 
+// Map URL from environment variable or default
+const MAP_URL = import.meta.env.VITE_MAP_URL || 'https://mapa.fincaserver.net';
+
 const MapSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
@@ -44,7 +47,7 @@ const MapSection = () => {
           {/* Map iframe container */}
           <div className="relative bg-jungle-medium rounded-xl overflow-hidden">
             <iframe
-              src="https://mapa.fincaserver.net"
+              src={MAP_URL}
               className="w-full h-[500px] md:h-[600px] border-0"
               title="Mapa de Finca Server"
               loading="lazy"
@@ -61,7 +64,7 @@ const MapSection = () => {
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <motion.a
-            href="https://mapa.fincaserver.net"
+            href={MAP_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3 px-6 py-3 
