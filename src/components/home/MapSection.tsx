@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { useInView } from 'motion/react';
 import { useRef } from 'react';
+import mapaImage from '../../assets/mapa.png';
 
 // Map URL from environment variable or default
 const MAP_URL = import.meta.env.VITE_MAP_URL || 'https://mapa.fincaserver.net';
@@ -76,12 +77,38 @@ const MapSection = () => {
           <div className="absolute -inset-0.5 bg-gradient-to-r from-tropical-green via-tropical-teal to-tropical-emerald rounded-2xl opacity-75" />
           
           {/* Map preview container */}
-          <div className="relative bg-gradient-to-br from-jungle-medium via-jungle-dark to-jungle-medium rounded-xl overflow-hidden p-8 md:p-12">
-            {/* Pattern overlay */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0" style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-              }} />
+          <div className="relative rounded-xl overflow-hidden p-8 md:p-12">
+            {/* Map background image with pixelated grid aesthetic */}
+            <div className="absolute inset-0">
+              <motion.img
+                src={mapaImage}
+                alt="Costa Rica Map"
+                className="w-full h-full object-cover select-none"
+                style={{
+                  imageRendering: 'pixelated',
+                }}
+                initial={{ opacity: 0, filter: 'blur(2px) brightness(0.4)' }}
+                animate={isInView ? { opacity: 1, filter: 'blur(1px) brightness(0.5)' } : { opacity: 0, filter: 'blur(2px) brightness(0.4)' }}
+                transition={{ duration: 1, delay: 0.3 }}
+              />
+              
+              {/* Gradient overlay for better content readability */}
+              <div className="absolute inset-0 bg-gradient-to-b from-jungle-dark/70 via-jungle-dark/50 to-jungle-dark/80" />
+              
+              {/* Grid texture pattern overlay */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                }} />
+              </div>
+              
+              {/* Subtle vignette effect */}
+              <div 
+                className="absolute inset-0"
+                style={{
+                  background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 30%, rgba(15, 26, 15, 0.6) 80%, rgba(15, 26, 15, 0.9) 100%)',
+                }}
+              />
             </div>
 
             <div className="relative z-10">

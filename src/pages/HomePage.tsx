@@ -6,8 +6,8 @@ const HomePage = () => {
   return (
     <>
       <HeroSection />
-      <FeaturesSection />
       <MapSection />
+      <FeaturesSection />
     </>
   );
 };
