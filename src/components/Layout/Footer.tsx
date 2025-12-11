@@ -78,7 +78,7 @@ const Footer = () => {
             <div className="flex gap-3">
               {/* Discord */}
               <motion.a
-                href="https://discord.com/invite/FQh9dcNMQq"
+                href={import.meta.env.VITE_DISCORD_INVITE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 

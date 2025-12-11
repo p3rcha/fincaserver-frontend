@@ -4,8 +4,8 @@ import IPCopyButton from './IPCopyButton';
 import ParticleBackground from './ParticleBackground';
 import heroImage from '../../assets/hero.png';
 
-// Discord invite URL
-const DISCORD_INVITE_URL = 'https://discord.com/invite/FQh9dcNMQq';
+// Discord invite URL from environment variable
+const DISCORD_INVITE_URL = import.meta.env.VITE_DISCORD_INVITE_URL;
 
 const HeroSection = () => {
   const serverName = "FINCA SERVER";

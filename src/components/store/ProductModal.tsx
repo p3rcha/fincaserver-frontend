@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'motion/react';
 import type { TebexPackage } from '../../types/TebexTypes';
 
-// Discord invite URL
-const DISCORD_INVITE_URL = 'https://discord.com/invite/FQh9dcNMQq';
+// Discord invite URL from environment variable
+const DISCORD_INVITE_URL = import.meta.env.VITE_DISCORD_INVITE_URL;
 
 interface ProductModalProps {
   package_: TebexPackage | null;

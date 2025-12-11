@@ -6,8 +6,8 @@ import type { TebexPackage, TebexCategory } from '../types/TebexTypes';
 import ProductCard from '../components/store/ProductCard';
 import ProductModal from '../components/store/ProductModal';
 
-// Discord invite URL
-const DISCORD_INVITE_URL = 'https://discord.com/invite/FQh9dcNMQq';
+// Discord invite URL from environment variable
+const DISCORD_INVITE_URL = import.meta.env.VITE_DISCORD_INVITE_URL;
 
 /**
  * Convert category name to URL slug
