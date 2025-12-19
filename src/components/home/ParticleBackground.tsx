@@ -1,9 +1,18 @@
 import { motion } from 'motion/react';
-import { useMemo } from 'react';
+import { useState } from 'react';
+
+type Particle = {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  duration: number;
+  delay: number;
+};
 
 const ParticleBackground = () => {
-  // Generate random particles
-  const particles = useMemo(() => {
+  // Generate random particles using lazy initializer (only called once during initialization)
+  const particles = useState<Particle[]>(() => {
     return Array.from({ length: 50 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
@@ -12,7 +21,7 @@ const ParticleBackground = () => {
       duration: Math.random() * 20 + 15,
       delay: Math.random() * 5,
     }));
-  }, []);
+  })[0];
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
