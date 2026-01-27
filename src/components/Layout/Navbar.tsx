@@ -25,6 +25,7 @@ const Navbar = () => {
   const navLinks = [
     { to: '/', label: 'Inicio', exact: true },
     { to: '/tienda', label: 'Tienda', exact: false },
+    { to: '/elecciones', label: 'Elecciones', exact: true },
   ];
   
   // Check if link is active (exact match or starts with for nested routes)

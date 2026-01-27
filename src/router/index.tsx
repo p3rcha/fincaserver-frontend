@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import MainLayout from '../components/Layout/MainLayout';
 import HomePage from '../pages/HomePage';
 import StorePage from '../pages/StorePage';
+import EleccionesPage from '../pages/EleccionesPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
 export const router = createBrowserRouter([
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
       {
         path: 'store',
         element: <Navigate to="/tienda" replace />,
+      },
+      {
+        path: 'elecciones',
+        element: <EleccionesPage />,
       },
       {
         path: '*',

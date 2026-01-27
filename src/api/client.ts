@@ -42,7 +42,13 @@ apiClient.interceptors.response.use(
 
       // Server responded with error status
       const status = error.response.status;
-      const message = error.response.data?.error || error.message;
+      const errorData = error.response.data;
+      const message = errorData?.error || errorData?.message || error.message;
+
+      // Create a more descriptive error with the backend message
+      const enhancedError = new Error(message);
+      (enhancedError as any).response = error.response;
+      (enhancedError as any).status = status;
 
       switch (status) {
         case 400:
@@ -59,10 +65,13 @@ apiClient.interceptors.response.use(
           break;
         case 500:
           console.error('[API] Server error:', message);
+          console.error('[API] Full error response:', errorData);
           break;
         default:
           console.error(`[API] Error ${status}:`, message);
       }
+      
+      return Promise.reject(enhancedError);
     }
     return Promise.reject(error);
   }
